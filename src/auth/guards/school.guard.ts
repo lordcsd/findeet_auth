@@ -1,8 +1,8 @@
 import { AuthGuard } from '@nestjs/passport';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { userRoles } from 'src/dtos/userRole.dto';
+import { userRoles } from '../../dtos/userRole.dto';
 
-export class SchoolGuard extends AuthGuard('jwt') {
+export class SchoolAuthGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
     return super.canActivate(context);
   }

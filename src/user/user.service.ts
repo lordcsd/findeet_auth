@@ -1,21 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { User } from 'src/entities/user.entity';
-import { loginDTO } from '../auth/dtos/login.dto';
-import { signUpDTO } from './dtos/signup.dto';
+import { User } from '../entities/user.entity';
 import { Repository } from 'typeorm';
-import { CustomRepository } from 'src/database/repositories/customRepository';
-import * as bcrypt from 'bcrypt';
+import { CustomRepository } from '../database/repositories/customRepository';
 import { ConfigService } from '@nestjs/config';
-import { configConstants } from 'src/constants/configConstants';
 
 @Injectable()
 export class UserService {
   userRepository: Repository<User>;
 
-  constructor(
-    private readonly customRepository: CustomRepository,
-    private readonly configService: ConfigService,
-  ) {
+  constructor(private readonly customRepository: CustomRepository) {
     this.userRepository = this.customRepository.UserRepository();
   }
 
@@ -23,7 +16,6 @@ export class UserService {
     const user = await this.userRepository.findOne({
       where: { email: email },
     });
-
     return user;
   }
 }

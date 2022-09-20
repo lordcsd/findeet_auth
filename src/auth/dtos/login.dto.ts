@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty, Matches, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { userRoles } from 'src/dtos/userRole.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class loginDTO {
   @IsNotEmpty()
@@ -11,6 +11,10 @@ export class loginDTO {
     },
   )
   @Transform(({ value }) => value.toLowerCase())
+  @ApiProperty({
+    type: String,
+    description: 'User email',
+  })
   email: string;
 
   @IsNotEmpty()
@@ -19,5 +23,6 @@ export class loginDTO {
   @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/, {
     message: 'password too weak',
   })
+  @ApiProperty({ description: 'User password', type: String })
   password: string;
 }

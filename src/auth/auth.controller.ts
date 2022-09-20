@@ -1,8 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { loginDTO } from 'src/auth/dtos/login.dto';
-import { signUpDTO } from 'src/user/dtos/signup.dto';
+import { Body, Controller, Post, Get, UseGuards } from '@nestjs/common';
+import { loginDTO } from './dtos/login.dto';
+import { signUpDTO } from './dtos/signUp.dto';
 import { AuthService } from './auth.service';
+import { SchoolAuthGuard } from './guards/school.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { StudentAuthGuard } from './guards/student.guard';
+import { ParentAuthGuard } from './guards/parent.guard';
 
+@ApiTags('Users')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -15,5 +20,26 @@ export class AuthController {
   @Post('sign-up')
   async signUp(@Body() userDetails: signUpDTO) {
     return await this.authService.signUp(userDetails);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(SchoolAuthGuard)
+  @Get('schools-only')
+  async school() {
+    return 'This route test JWT auth for School Role';
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(StudentAuthGuard)
+  @Get('students-only')
+  async student() {
+    return 'This route test JWT auth for student Role';
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(ParentAuthGuard)
+  @Get('parents-only')
+  async parent() {
+    return 'This route test JWT auth for parent Role';
   }
 }

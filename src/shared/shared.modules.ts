@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { CustomRepository } from 'src/database/repositories/customRepository';
+import { CustomRepository } from '../database/repositories/customRepository';
 
 @Module({
   imports: [],

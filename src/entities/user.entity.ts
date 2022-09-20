@@ -1,5 +1,5 @@
-import { userRoles } from 'src/dtos/userRole.dto';
-import { SharedEntity } from 'src/shared/shared.entity';
+import { userRoles } from '../dtos/userRole.dto';
+import { SharedEntity } from '../shared/shared.entity';
 import { Entity, Column } from 'typeorm';
 
 @Entity()

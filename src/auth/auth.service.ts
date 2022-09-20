@@ -1,13 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
+import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { configConstants } from 'src/constants/configConstants';
-import { loginDTO } from 'src/auth/dtos/login.dto';
-import { signUpDTO } from 'src/user/dtos/signup.dto';
+import { configConstants } from '../constants/configConstants';
+import { loginDTO } from './dtos/login.dto';
+import { signUpDTO } from './dtos/signUp.dto';
 import { Repository } from 'typeorm';
-import { User } from 'src/entities/user.entity';
+import { User } from '../entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +28,7 @@ export class AuthService {
     }
 
     //compare password
-    const passwordIsValid = await bcrypt.compare(password, user.password); //password == user['password'];
+    const passwordIsValid = await bcrypt.compare(password, user.password);
     return passwordIsValid ? user : null;
   }
 
@@ -62,10 +62,5 @@ export class AuthService {
       };
     }
     throw new UnauthorizedException('Invalid credentials');
-  }
-
-  async verify(token: string) {
-    const decoded = this.jwtService.verify(token, { secret: this.jwt_secret });
-    return this.userService.getUserByEmail(decoded.email);
   }
 }
