@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
@@ -8,6 +12,7 @@ import { loginDTO } from './dtos/login.dto';
 import { signUpDTO } from './dtos/signUp.dto';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
+import { CustomRepository } from '../database/repositories/customRepository';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +21,10 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+    private readonly customRepository: CustomRepository,
+  ) {
+    this.userRepository = this.customRepository.UserRepository();
+  }
 
   jwt_secret = this.configService.get<string>(configConstants.jwt.secret);
 
@@ -33,17 +41,27 @@ export class AuthService {
   }
 
   async signUp(details: signUpDTO) {
+    const alreadyExisting = await this.userRepository.findOne({
+      where: { email: details.email },
+    });
+
+    if (alreadyExisting) {
+      throw new ConflictException('Email Already in use');
+    }
     const salt = Number(this.configService.get(configConstants.bcrypt.salt));
     details.password = await bcrypt.hash(details.password, salt);
 
-    const createdUser = await this.userRepository.save({
+    await this.userRepository.save({
       firstName: details.firstName,
       lastName: details.lastName,
       email: details.email,
       password: details.password,
       role: details.role,
     });
-    return createdUser;
+    return {
+      statusCode: 200,
+      message: 'Account Created',
+    };
   }
 
   async login(user: loginDTO): Promise<{ access_token: string }> {
