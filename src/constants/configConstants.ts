@@ -9,4 +9,8 @@ export const configConstants = {
   },
   jwt: { secret: 'JWT_SECRET' },
   bcrypt: { salt: 'BCRYPT_SALT' },
+  googleAuth: {
+    clientId: 'GOOGLE_AUTH_CLIENT_ID',
+    clientSecret: 'GOOGLE_AUTH_CLIENT_SECRET',
+  },
 };

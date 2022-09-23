@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   Matches,
   MinLength,
+  IsEmail,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { userRoles } from '../../dtos/userRole.dto';
@@ -11,12 +12,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class signUpDTO {
   @IsNotEmpty()
-  @Matches(
-    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-    {
-      message: 'Invalid email',
-    },
-  )
+  @IsEmail({ message: 'Invalid Email' })
   @Transform(({ value }) => value.toLowerCase())
   @ApiProperty({
     type: String,
@@ -25,8 +21,8 @@ export class signUpDTO {
   })
   email: string;
 
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   @ApiProperty({
     type: String,
     description: 'User First name',
@@ -34,8 +30,8 @@ export class signUpDTO {
   })
   firstName: string;
 
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   @ApiProperty({
     type: String,
     description: 'User Last name',
@@ -56,10 +52,10 @@ export class signUpDTO {
   })
   password: string;
 
+  @IsNotEmpty()
   @IsEnum(userRoles, {
     message: `role must be ${Object.values(userRoles).join(' or ')}`,
   })
-  @IsNotEmpty()
   @ApiProperty({
     type: String,
     description: 'User role',
