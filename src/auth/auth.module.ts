@@ -9,14 +9,30 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { ClientsModule } from '@nestjs/microservices/module/clients.module';
+import { Transport } from '@nestjs/microservices/enums/transport.enum';
 
 @Module({
   imports: [
     UserModule,
+    ClientsModule.register([
+      {
+        name: 'NOTIF_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [process.env.RABBITMQ_URL],
+          queue: 'NOTIFICATION',
+          queueOptions: {
+            durable: false,
+          },
+        },
+      },
+    ]),
     SharedModule,
     PassportModule.register({
       defaultStrategy: 'jwt',
     }),
+
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configServeice: ConfigService) => ({

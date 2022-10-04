@@ -7,6 +7,7 @@ import { configConstants } from './constants/configConstants';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -23,6 +24,7 @@ import { configConstants } from './constants/configConstants';
       }),
       inject: [ConfigService],
     }),
+
     AuthModule,
   ],
   controllers: [],

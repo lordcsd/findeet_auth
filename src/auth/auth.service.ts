@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Inject,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -13,7 +14,12 @@ import { signUpDTO } from './dtos/signUp.dto';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { CustomRepository } from '../database/repositories/customRepository';
+import { FindeetAppResponse } from 'findeet-api-package';
+import { AuthProviders } from 'src/constants/authProviders';
+import { ClientProxy } from '@nestjs/microservices/client';
+import { firstValueFrom } from 'rxjs';
 
+import {} from 'findeet-api-package';
 @Injectable()
 export class AuthService {
   userRepository: Repository<User>;
@@ -22,8 +28,13 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly customRepository: CustomRepository,
+    @Inject('NOTIF_SERVICE') private client: ClientProxy,
   ) {
     this.userRepository = this.customRepository.UserRepository();
+
+    // setInterval(async () => {
+    //   console.log(await firstValueFrom(this.client.emit('SEND_MAIL', {})));
+    // }, 5000);
   }
 
   jwt_secret = this.configService.get<string>(configConstants.jwt.secret);
@@ -40,7 +51,7 @@ export class AuthService {
     return passwordIsValid ? user : null;
   }
 
-  async signUp(details: signUpDTO) {
+  async signUp(details: signUpDTO): Promise<FindeetAppResponse> {
     const alreadyExisting = await this.userRepository.findOne({
       where: { email: details.email },
     });
@@ -58,38 +69,46 @@ export class AuthService {
       password: details.password,
       role: details.role,
     });
-    return {
-      statusCode: 200,
-      message: 'Account Created',
-    };
+
+    return FindeetAppResponse.Ok('', 'New User created', 200);
   }
 
-  async login(user: loginDTO): Promise<{ access_token: string }> {
+  async login(user: loginDTO): Promise<FindeetAppResponse> {
     const fetchedUser = await this.validate(user.email, user.password);
 
-    if (fetchedUser) {
+    if (fetchedUser && fetchedUser.authProvider == AuthProviders.local) {
+      if (!fetchedUser.emailVerified) {
+        throw new UnauthorizedException('Email not verified');
+      }
+
       const payload = {
         email: user.email,
         id: fetchedUser.id,
       };
-      return {
-        access_token: this.jwtService.sign(payload, {
-          secret: this.jwt_secret,
-          expiresIn: 7200,
-        }),
-      };
+
+      return FindeetAppResponse.Ok(
+        {
+          access_token: this.jwtService.sign(payload, {
+            secret: this.jwt_secret,
+            expiresIn: 7200,
+          }),
+        },
+        'Login Successful',
+        201,
+      );
     }
+
     throw new UnauthorizedException('Invalid credentials');
   }
 
-  googleLogin(req) {
+  googleLogin(req, userRole: string) {
     if (!req.user) {
       return 'No user from google';
     }
 
     return {
       message: 'User information from google',
-      user: req.user,
+      user: { ...req.user, userRole },
     };
   }
 }
