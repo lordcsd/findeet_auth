@@ -19,6 +19,7 @@ import { GoogleAuthGuard } from './guards/googleAuth.guard';
 import { StartAuthSessionDTO } from './dtos/startAuthSessionParams.dto';
 import { FindeetAppResponse } from 'findeet-api-package';
 import { EmailVerificationMail } from './dtos/emailVerificationMail.dto';
+import { CompleteEmailVerificationDTO } from './dtos/completeEmailVerification.dto';
 
 @ApiTags('Users')
 @Controller('auth')
@@ -47,6 +48,16 @@ export class AuthController {
   @Post('send_email_verification_mail')
   async sendEmailVerificationMail(@Body() params: EmailVerificationMail) {
     return await this.authService.sendEmailVerificationEmail(params);
+  }
+
+  @ApiOperation({
+    description: 'Call this endpoint to complete email verification',
+  })
+  @Get('complete-email-verification')
+  async completeEmailVerification(
+    @Query() { processToken }: CompleteEmailVerificationDTO,
+  ) {
+    return await this.authService.completeEmailVerification(processToken);
   }
 
   @ApiOperation({ description: 'Create a new user' })

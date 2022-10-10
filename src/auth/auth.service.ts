@@ -26,6 +26,7 @@ import { ClientProxy } from '@nestjs/microservices/client';
 import { EmailVerificationMail } from './dtos/emailVerificationMail.dto';
 import { createOTP } from './utils/createOTP';
 import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
+import { decodedProcessTokenDTO } from './dtos/completeEmailVerification.dto';
 @Injectable()
 export class AuthService {
   userRepository: Repository<User>;
@@ -101,14 +102,63 @@ export class AuthService {
     }
   }
 
-  async sendEmailVerificationEmail(details: EmailVerificationMail) {
+  async sendEmailVerificationEmail(
+    details: EmailVerificationMail,
+  ): Promise<FindeetAppResponse> {
     const { email } = details;
+
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      return FindeetAppResponse.BadRequest(
+        'Email not registered',
+        'invalid Email',
+        '',
+        '404',
+      );
+    }
+
+    if (user.emailVerified == true) {
+      return FindeetAppResponse.Ok('', 'Email Already Verified', '200');
+    }
+
+    const processToken = this.jwtService.sign({ id: user.id });
+
+    const completeProcessURL = `${this.configService.get<string>(
+      configConstants.service.root,
+    )}/api/v1/auth/complete-email-verification?processToken=${processToken}`;
 
     await this.sendEmail({
       recipients: [email],
       emailType: EmailTypes.EMAIL_VERIFICATION,
       subject: 'Email Verification',
+      redirectTo: completeProcessURL,
     });
+
+    return FindeetAppResponse.Ok('', 'Email verification mail sent', '201');
+  }
+
+  async completeEmailVerification(
+    processToken: string,
+  ): Promise<FindeetAppResponse> {
+    const decoded = this.jwtService.decode(
+      processToken,
+    ) as decodedProcessTokenDTO;
+
+    if (decoded) {
+      await this.userRepository.update(
+        { id: decoded.id },
+        { emailVerified: true },
+      );
+      return FindeetAppResponse.Ok('', 'Email Verified', 200);
+    }
+
+    return FindeetAppResponse.OkFailue(
+      '',
+      'Verification Process Failed, Invalid Token',
+      '422',
+      '',
+    );
   }
 
   async login(user: loginDTO): Promise<FindeetAppResponse> {

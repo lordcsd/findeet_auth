@@ -21,4 +21,5 @@ export const configConstants = {
   rabbitMQ: {
     url: 'RABBITMQ_URL',
   },
+  service: { root: 'ROOT' },
 };
