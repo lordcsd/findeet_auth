@@ -11,7 +11,7 @@ import { userRoles } from '../../dtos/userRole.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class signUpDTO {
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Email cannot be empty' })
   @IsEmail({ message: 'Invalid Email' })
   @Transform(({ value }) => value.toLowerCase())
   @ApiProperty({

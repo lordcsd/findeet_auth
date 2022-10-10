@@ -11,15 +11,21 @@ import * as bcrypt from 'bcrypt';
 import { configConstants } from '../constants/configConstants';
 import { loginDTO } from './dtos/login.dto';
 import { signUpDTO } from './dtos/signUp.dto';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { CustomRepository } from '../database/repositories/customRepository';
-import { FindeetAppResponse } from 'findeet-api-package';
+import {
+  EmailTypes,
+  FindeetAppResponse,
+  NOTIFICATION_QUEUE,
+  SendEmailOptions,
+} from 'findeet-api-package';
 import { AuthProviders } from 'src/constants/authProviders';
 import { ClientProxy } from '@nestjs/microservices/client';
-import { firstValueFrom } from 'rxjs';
 
-import {} from 'findeet-api-package';
+import { EmailVerificationMail } from './dtos/emailVerificationMail.dto';
+import { createOTP } from './utils/createOTP';
+import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
 @Injectable()
 export class AuthService {
   userRepository: Repository<User>;
@@ -28,16 +34,19 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly customRepository: CustomRepository,
-    @Inject('NOTIF_SERVICE') private client: ClientProxy,
+    @Inject('NOTIF_SERVICE') private notificationClient: ClientProxy,
   ) {
     this.userRepository = this.customRepository.UserRepository();
-
-    // setInterval(async () => {
-    //   console.log(await firstValueFrom(this.client.emit('SEND_MAIL', {})));
-    // }, 5000);
   }
 
   jwt_secret = this.configService.get<string>(configConstants.jwt.secret);
+
+  async sendEmail(details: SendEmailOptions) {
+    await this.notificationClient.emit(
+      NOTIFICATION_QUEUE.PATTERNS.SEND_MAIL,
+      details,
+    );
+  }
 
   async validate(email: string, password: string) {
     const user = await this.userService.getUserByEmail(email);
@@ -70,7 +79,36 @@ export class AuthService {
       role: details.role,
     });
 
+    //send email verification mail
+    await this.sendEmailVerificationEmail({ email: details.email });
+
     return FindeetAppResponse.Ok('', 'New User created', 200);
+  }
+
+  async forgotPassWord(
+    details: EmailVerificationMail,
+  ): Promise<FindeetAppResponse> {
+    const { email } = details;
+    const user = await this.userRepository.find({ where: { email: email } });
+
+    if (!user) {
+      return FindeetAppResponse.NotFoundRequest(
+        'Invalid user',
+        'User with Email not found',
+        '',
+        '404',
+      );
+    }
+  }
+
+  async sendEmailVerificationEmail(details: EmailVerificationMail) {
+    const { email } = details;
+
+    await this.sendEmail({
+      recipients: [email],
+      emailType: EmailTypes.EMAIL_VERIFICATION,
+      subject: 'Email Verification',
+    });
   }
 
   async login(user: loginDTO): Promise<FindeetAppResponse> {
@@ -78,13 +116,74 @@ export class AuthService {
 
     if (fetchedUser && fetchedUser.authProvider == AuthProviders.local) {
       if (!fetchedUser.emailVerified) {
-        throw new UnauthorizedException('Email not verified');
+        return FindeetAppResponse.NotFoundRequest(
+          'Unverified Email',
+          'Please Verify your Email',
+          '',
+          '406',
+        );
       }
+    }
 
+    const otp = createOTP();
+
+    //ten minutes time
+    const OTPExpires = new Date(Date.now() + 1000 * 60 * 10);
+
+    await this.userRepository.update(
+      { email: fetchedUser.email },
+      { login_otp: otp, login_otp_expires: OTPExpires },
+    );
+
+    await this.sendEmail({
+      recipients: [fetchedUser.email],
+      emailType: EmailTypes.LOGIN_OTP,
+      subject: 'Login OTP',
+      otp: otp,
+      username: fetchedUser.firstName,
+    });
+
+    return FindeetAppResponse.Ok('', 'Login sent to email', '201');
+  }
+
+  async completeLoginWithOTP(
+    details: CompleteLoginWithOTP,
+  ): Promise<FindeetAppResponse> {
+    const { email, otp } = details;
+
+    const user = await this.userService.getUserByEmail(email);
+
+    if (!user) {
+      return FindeetAppResponse.NotFoundRequest(
+        'Invalid User',
+        'Email not registered',
+        '',
+        '404',
+      );
+    }
+
+    if (!user.login_otp) {
+      return FindeetAppResponse.NotFoundRequest(
+        '',
+        'No Login OTP found for user',
+        '',
+        '404',
+      );
+    }
+
+    const OTPValid =
+      +user.login_otp_expires > Date.now() && user.login_otp == otp;
+
+    if (OTPValid) {
       const payload = {
         email: user.email,
-        id: fetchedUser.id,
+        id: user.id,
       };
+
+      await this.userRepository.update(
+        { email: user.email },
+        { login_otp: null, login_otp_expires: null },
+      );
 
       return FindeetAppResponse.Ok(
         {
@@ -98,7 +197,7 @@ export class AuthService {
       );
     }
 
-    throw new UnauthorizedException('Invalid credentials');
+    return FindeetAppResponse.OkFailue('', 'OTP has Expired', '406', '');
   }
 
   googleLogin(req, userRole: string) {

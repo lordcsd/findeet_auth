@@ -32,4 +32,10 @@ export class User extends SharedEntity {
     enum: userRoles,
   })
   role: userRoles;
+
+  @Column({ nullable: true })
+  login_otp: string;
+
+  @Column({ nullable: true })
+  login_otp_expires: Date;
 }

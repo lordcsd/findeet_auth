@@ -17,7 +17,8 @@ import { StudentAuthGuard } from './guards/student.guard';
 import { ParentAuthGuard } from './guards/parent.guard';
 import { GoogleAuthGuard } from './guards/googleAuth.guard';
 import { StartAuthSessionDTO } from './dtos/startAuthSessionParams.dto';
-import { FindeetAppResponse } from 'findeet-api-package/lib/response/findeetResponse';
+import { FindeetAppResponse } from 'findeet-api-package';
+import { EmailVerificationMail } from './dtos/emailVerificationMail.dto';
 
 @ApiTags('Users')
 @Controller('auth')
@@ -37,6 +38,15 @@ export class AuthController {
   @Post('login')
   async login(@Body() params: loginDTO): Promise<FindeetAppResponse> {
     return await this.authService.login(params as loginDTO);
+  }
+
+  @ApiOperation({
+    description:
+      "Send or Resend email verification mail to user's email address",
+  })
+  @Post('send_email_verification_mail')
+  async sendEmailVerificationMail(@Body() params: EmailVerificationMail) {
+    return await this.authService.sendEmailVerificationEmail(params);
   }
 
   @ApiOperation({ description: 'Create a new user' })

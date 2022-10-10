@@ -1,15 +1,18 @@
-import { IsString, IsNotEmpty, Matches, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  Matches,
+  MinLength,
+  IsEmail,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class loginDTO {
   @IsNotEmpty()
-  @Matches(
-    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-    {
-      message: 'Invalid email',
-    },
-  )
+  @IsEmail({
+    message: 'Invalid email',
+  })
   @Transform(({ value }) => value.toLowerCase())
   @ApiProperty({
     type: String,
