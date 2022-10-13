@@ -3,6 +3,21 @@ import { SharedEntity } from '../shared/shared.entity';
 import { Entity, Column } from 'typeorm';
 import { AuthProviders } from 'src/constants/authProviders';
 
+//COMMON
+//fullname
+//Password
+//email
+
+//STUDENT
+//DOB
+//class
+
+//PARENT
+//location
+//address - optional
+//spouse email address - optional
+//spouse name - optional
+
 @Entity()
 export class User extends SharedEntity {
   @Column()
@@ -12,7 +27,7 @@ export class User extends SharedEntity {
   emailVerified: boolean;
 
   @Column()
-  firstName: string;
+  fullname: string;
 
   @Column({
     type: 'enum',
@@ -20,9 +35,6 @@ export class User extends SharedEntity {
     default: AuthProviders.local,
   })
   authProvider: AuthProviders;
-
-  @Column()
-  lastName: string;
 
   @Column({ nullable: true })
   password: string;

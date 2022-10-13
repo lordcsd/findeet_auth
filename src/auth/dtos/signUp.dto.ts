@@ -25,19 +25,10 @@ export class signUpDTO {
   @IsString()
   @ApiProperty({
     type: String,
-    description: 'User First name',
+    description: 'User Full name',
     default: 'John',
   })
-  firstName: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @ApiProperty({
-    type: String,
-    description: 'User Last name',
-    default: 'Doe',
-  })
-  lastName: string;
+  name: string;
 
   @IsNotEmpty()
   @IsString()

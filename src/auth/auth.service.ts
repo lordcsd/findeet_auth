@@ -1,9 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  Inject,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
@@ -11,7 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { configConstants } from '../constants/configConstants';
 import { loginDTO } from './dtos/login.dto';
 import { signUpDTO } from './dtos/signUp.dto';
-import { MoreThan, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { CustomRepository } from '../database/repositories/customRepository';
 import {
@@ -27,6 +22,7 @@ import { EmailVerificationMail } from './dtos/emailVerificationMail.dto';
 import { createOTP } from './utils/createOTP';
 import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
 import { decodedProcessTokenDTO } from './dtos/completeEmailVerification.dto';
+import { ResetPasswordDTO } from './dtos/resetPassword.dto';
 @Injectable()
 export class AuthService {
   userRepository: Repository<User>;
@@ -73,8 +69,7 @@ export class AuthService {
     details.password = await bcrypt.hash(details.password, salt);
 
     await this.userRepository.save({
-      firstName: details.firstName,
-      lastName: details.lastName,
+      name: details.name,
       email: details.email,
       password: details.password,
       role: details.role,
@@ -100,6 +95,50 @@ export class AuthService {
         '404',
       );
     }
+  }
+
+  async resetPassword(details: ResetPasswordDTO): Promise<FindeetAppResponse> {
+    const { email, newPassword, oldPassword, confirmPassword } = details;
+
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      return FindeetAppResponse.BadRequest(
+        'Not Found',
+        'Invalid Email',
+        '',
+        '404',
+      );
+    }
+
+    const passwordIsValid = await bcrypt.compare(oldPassword, user.password);
+
+    if (!passwordIsValid) {
+      return FindeetAppResponse.BadRequest(
+        '',
+        'Invalid oldPassword',
+        '',
+        '406',
+      );
+    }
+
+    if (newPassword == confirmPassword) {
+      const salt = Number(this.configService.get(configConstants.bcrypt.salt));
+      const newPasswordHash = await bcrypt.hash(newPassword, salt);
+
+      await this.userRepository.update(
+        { email, password: user.password },
+        { password: newPasswordHash },
+      );
+      return FindeetAppResponse.Ok('', 'Password Updated', '200');
+    }
+
+    return FindeetAppResponse.BadRequest(
+      '',
+      'newPassword and confirmPassword does not match',
+      '',
+      '422',
+    );
   }
 
   async sendEmailVerificationEmail(
@@ -164,6 +203,15 @@ export class AuthService {
   async login(user: loginDTO): Promise<FindeetAppResponse> {
     const fetchedUser = await this.validate(user.email, user.password);
 
+    if (!fetchedUser) {
+      return FindeetAppResponse.BadRequest(
+        '',
+        'Invalid creadentials',
+        '',
+        '406',
+      );
+    }
+
     if (fetchedUser && fetchedUser.authProvider == AuthProviders.local) {
       if (!fetchedUser.emailVerified) {
         return FindeetAppResponse.NotFoundRequest(
@@ -190,10 +238,10 @@ export class AuthService {
       emailType: EmailTypes.LOGIN_OTP,
       subject: 'Login OTP',
       otp: otp,
-      username: fetchedUser.firstName,
+      username: fetchedUser.fullname,
     });
 
-    return FindeetAppResponse.Ok('', 'Login sent to email', '201');
+    return FindeetAppResponse.Ok('', 'Login OTP sent to email', '201');
   }
 
   async completeLoginWithOTP(

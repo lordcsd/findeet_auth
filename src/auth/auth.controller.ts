@@ -20,20 +20,13 @@ import { StartAuthSessionDTO } from './dtos/startAuthSessionParams.dto';
 import { FindeetAppResponse } from 'findeet-api-package';
 import { EmailVerificationMail } from './dtos/emailVerificationMail.dto';
 import { CompleteEmailVerificationDTO } from './dtos/completeEmailVerification.dto';
+import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
+import { ResetPasswordDTO } from './dtos/resetPassword.dto';
 
 @ApiTags('Users')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @Get('start-auth-provider-session')
-  async testSession(
-    @Session() session: Record<string, any>,
-    @Query() details: StartAuthSessionDTO,
-  ) {
-    session['userRole'] = details.userRole;
-    return 'session started';
-  }
 
   @ApiOperation({ description: 'Log-in to Findeet account' })
   @Post('login')
@@ -42,10 +35,18 @@ export class AuthController {
   }
 
   @ApiOperation({
+    description: 'Last Login step, verifies OTP and returns token',
+  })
+  @Post('complete-login-with-otp')
+  async completeLoginWithOTP(@Body() details: CompleteLoginWithOTP) {
+    return await this.authService.completeLoginWithOTP(details);
+  }
+
+  @ApiOperation({
     description:
       "Send or Resend email verification mail to user's email address",
   })
-  @Post('send_email_verification_mail')
+  @Post('send-email-verification-mail')
   async sendEmailVerificationMail(@Body() params: EmailVerificationMail) {
     return await this.authService.sendEmailVerificationEmail(params);
   }
@@ -58,6 +59,34 @@ export class AuthController {
     @Query() { processToken }: CompleteEmailVerificationDTO,
   ) {
     return await this.authService.completeEmailVerification(processToken);
+  }
+
+  //reset password
+  @ApiOperation({ description: 'Change user password' })
+  @Post('reset-password')
+  async resetPassword(
+    @Body() details: ResetPasswordDTO,
+  ): Promise<FindeetAppResponse> {
+    return await this.authService.resetPassword(details);
+  }
+
+  //forgot password
+  @ApiOperation({ description: 'Restore forgotten password' })
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() details: EmailVerificationMail,
+  ): Promise<FindeetAppResponse> {
+    return await this.authService.forgotPassWord(details);
+  }
+
+  //google auth routes
+  @Get('start-auth-provider-session')
+  async testSession(
+    @Session() session: Record<string, any>,
+    @Query() details: StartAuthSessionDTO,
+  ) {
+    session['userRole'] = details.userRole;
+    return 'session started';
   }
 
   @ApiOperation({ description: 'Create a new user' })
