@@ -11,7 +11,7 @@ import {
 export class ResetPasswordDTO {
   @IsNotEmpty({ message: 'Email cannot be empty' })
   @IsString({ message: 'Email: Must be a string' })
-  @IsEmail({ message: 'Invalid Email' })
+  @IsEmail({}, { message: 'Invalid Email' })
   @Transform(({ value }) => value.toLowerCase())
   @ApiProperty({
     type: String,

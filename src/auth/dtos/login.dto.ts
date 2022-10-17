@@ -10,9 +10,12 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class loginDTO {
   @IsNotEmpty()
-  @IsEmail({
-    message: 'Invalid email',
-  })
+  @IsEmail(
+    {},
+    {
+      message: 'Invalid email',
+    },
+  )
   @Transform(({ value }) => value.toLowerCase())
   @ApiProperty({
     type: String,
