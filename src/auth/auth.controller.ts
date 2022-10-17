@@ -23,7 +23,7 @@ import { CompleteEmailVerificationDTO } from './dtos/completeEmailVerification.d
 import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
 import { ResetPasswordDTO } from './dtos/resetPassword.dto';
 
-@ApiTags('Users')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
