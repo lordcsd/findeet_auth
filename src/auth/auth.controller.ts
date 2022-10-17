@@ -95,7 +95,7 @@ export class AuthController {
     return await this.authService.signUp(userDetails);
   }
 
-  @Get()
+  @Get('google-auth')
   @UseGuards(GoogleAuthGuard)
   async googleAuth(@Req() req, @Session() session: Record<string, any>) {
     //
