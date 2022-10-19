@@ -2,32 +2,25 @@ import { userRoles } from '../dtos/userRole.dto';
 import { SharedEntity } from '../shared/shared.entity';
 import { Entity, Column } from 'typeorm';
 import { AuthProviders } from 'src/constants/authProviders';
-
-//COMMON
-//fullname
-//Password
-//email
-
-//STUDENT
-//DOB
-//class
-
-//PARENT
-//location
-//address - optional
-//spouse email address - optional
-//spouse name - optional
+import { StudentClassCategoryeEnum } from 'src/auth/dtos/studentClassCategory.DTO';
 
 @Entity()
 export class User extends SharedEntity {
+  //common fields
+  @Column()
+  firstName: string;
+
+  @Column()
+  lastName: string;
+
   @Column()
   email: string;
 
+  @Column({ nullable: true })
+  password: string;
+
   @Column({ type: 'boolean', default: false })
   emailVerified: boolean;
-
-  @Column()
-  fullname: string;
 
   @Column({
     type: 'enum',
@@ -36,9 +29,6 @@ export class User extends SharedEntity {
   })
   authProvider: AuthProviders;
 
-  @Column({ nullable: true })
-  password: string;
-
   @Column({
     type: 'enum',
     enum: userRoles,
@@ -46,8 +36,28 @@ export class User extends SharedEntity {
   role: userRoles;
 
   @Column({ nullable: true })
-  login_otp: string;
+  loginOtp: string;
 
   @Column({ nullable: true })
-  login_otp_expires: Date;
+  loginOtpExpires: Date;
+
+  @Column({ nullable: true, type: 'enum', enum: StudentClassCategoryeEnum })
+  studentCategory: StudentClassCategoryeEnum;
+
+  //student specific fields
+  @Column({ type: 'date', nullable: true })
+  studentDOB: Date;
+
+  @Column({ type: 'int', nullable: true })
+  studentClass: number;
+
+  //parent specific fields
+  @Column({ nullable: true })
+  parentLocation: string;
+
+  @Column({ nullable: true })
+  parentAddress: string;
+
+  @Column({ nullable: true })
+  parentSpouseName: string;
 }

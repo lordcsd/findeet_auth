@@ -9,7 +9,12 @@ import {
   Query,
 } from '@nestjs/common';
 import { loginDTO } from './dtos/login.dto';
-import { signUpDTO } from './dtos/signUp.dto';
+import {
+  ParentSignUpDTO,
+  SchoolSignUpDTO,
+  signUpDTO,
+  StudentSignUpDTO,
+} from './dtos/signUp.dto';
 import { AuthService } from './auth.service';
 import { SchoolAuthGuard } from './guards/school.guard';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
@@ -22,6 +27,7 @@ import { EmailVerificationMail } from './dtos/emailVerificationMail.dto';
 import { CompleteEmailVerificationDTO } from './dtos/completeEmailVerification.dto';
 import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
 import { ResetPasswordDTO } from './dtos/resetPassword.dto';
+import { userRoles } from 'src/dtos/userRole.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -47,8 +53,11 @@ export class AuthController {
       "Send or Resend email verification mail to user's email address",
   })
   @Post('send-email-verification-mail')
-  async sendEmailVerificationMail(@Body() params: EmailVerificationMail) {
-    return await this.authService.sendEmailVerificationEmail(params);
+  async sendEmailVerificationMail(
+    @Body() params: EmailVerificationMail,
+    @Req() req,
+  ) {
+    return await this.authService.sendEmailVerificationEmail(params, req);
   }
 
   @ApiOperation({
@@ -79,6 +88,30 @@ export class AuthController {
     return await this.authService.forgotPassWord(details);
   }
 
+  // @ApiOperation({ description: 'Create a new STUDENT user' })
+  // @Post('student-sign-up')
+  // async signUpStudent(
+  //   @Body() userDetails: StudentSignUpDTO,
+  // ): Promise<FindeetAppResponse> {
+  //   return await this.authService.signUp(userDetails, userRoles.STUDENT);
+  // }
+
+  // @ApiOperation({ description: 'Create a new PARENT user' })
+  // @Post('parent-sign-up')
+  // async signUpParent(
+  //   @Body() userDetails: ParentSignUpDTO,
+  // ): Promise<FindeetAppResponse> {
+  //   return await this.authService.signUp(userDetails, userRoles.PARENT);
+  // }
+
+  // @ApiOperation({ description: 'Create a new SCHOOL user' })
+  // @Post('school-sign-up')
+  // async signUpSchool(
+  //   @Body() userDetails: SchoolSignUpDTO,
+  // ): Promise<FindeetAppResponse> {
+  //   return await this.authService.signUp(userDetails, userRoles.SCHOOL);
+  // }
+
   //google auth routes
   @Get('start-auth-provider-session')
   async testSession(
@@ -87,12 +120,6 @@ export class AuthController {
   ) {
     session['userRole'] = details.userRole;
     return 'session started';
-  }
-
-  @ApiOperation({ description: 'Create a new user' })
-  @Post('sign-up')
-  async signUp(@Body() userDetails: signUpDTO): Promise<FindeetAppResponse> {
-    return await this.authService.signUp(userDetails);
   }
 
   @Get('google-auth')

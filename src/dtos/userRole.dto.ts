@@ -1,5 +1,5 @@
 export enum userRoles {
-  student = 'STUDENT',
-  parent = 'PARENT',
-  school = 'SCHOOL',
+  STUDENT = 'STUDENT',
+  PARENT = 'PARENT',
+  SCHOOL = 'SCHOOL',
 }

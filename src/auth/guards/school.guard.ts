@@ -11,7 +11,7 @@ export class SchoolAuthGuard extends AuthGuard('jwt') {
     if (!user) {
       throw new UnauthorizedException();
     }
-    if (user && user.role === userRoles.school) {
+    if (user && user.role === userRoles.SCHOOL) {
       return user;
     }
     throw new UnauthorizedException();

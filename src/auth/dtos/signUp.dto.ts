@@ -5,12 +5,35 @@ import {
   Matches,
   MinLength,
   IsEmail,
+  IsDate,
+  IsNumberString,
+  IsDateString,
+  IsNumber,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { userRoles } from '../../dtos/userRole.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { StudentClassCategoryeEnum } from './studentClassCategory.DTO';
 
 export class signUpDTO {
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    type: String,
+    description: 'User First name',
+    default: 'John',
+  })
+  firstName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    type: String,
+    description: 'User Last name',
+    default: 'Doe',
+  })
+  lastName: string;
+
   @IsNotEmpty({ message: 'Email cannot be empty' })
   @IsEmail({}, { message: 'Invalid Email' })
   @Transform(({ value }) => value.toLowerCase())
@@ -20,15 +43,6 @@ export class signUpDTO {
     default: 'nicdos@gmail.com',
   })
   email: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @ApiProperty({
-    type: String,
-    description: 'User Full name',
-    default: 'John',
-  })
-  name: string;
 
   @IsNotEmpty()
   @IsString()
@@ -42,15 +56,59 @@ export class signUpDTO {
     default: 'ckjsdhcuisjdu7y12%^',
   })
   password: string;
+}
+
+export class StudentSignUpDTO extends signUpDTO {
+  @IsNotEmpty()
+  @IsDateString({ message: 'studentDOB: Must be valid date' })
+  @ApiProperty({ description: 'Students Day of Birth', type: Date })
+  studentDOB: Date;
 
   @IsNotEmpty()
-  @IsEnum(userRoles, {
-    message: `role must be ${Object.values(userRoles).join(' or ')}`,
+  @IsEnum(StudentClassCategoryeEnum, {
+    message: `studentClassCategory: Must be ${Object.values(
+      StudentClassCategoryeEnum,
+    ).join(' or ')}`,
   })
   @ApiProperty({
-    type: String,
-    description: 'User role',
-    default: userRoles.student,
+    description: `${Object.values(StudentClassCategoryeEnum).join(' or ')}`,
+    default: StudentClassCategoryeEnum.NURSERY,
   })
-  role: userRoles;
+  studentClassCategory: StudentClassCategoryeEnum;
+
+  @IsNotEmpty()
+  @IsNumber({}, { message: 'studentClass: Must be a number' })
+  @ApiProperty({ description: 'Students class', type: Number, default: 4 })
+  studentClass: number;
 }
+
+export class ParentSignUpDTO extends signUpDTO {
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    type: String,
+    description: 'Parent Location',
+    default: 'Lagos, Nigeria',
+  })
+  parentLocation: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    type: String,
+    description: 'Parent"s home address',
+    default: '20 Andrew road Ikoyi',
+  })
+  parentAddress: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty({
+    type: String,
+    description: 'Parent spouse"s name ',
+    default: 'Otamere',
+  })
+  parentSpouseName: string;
+}
+
+export class SchoolSignUpDTO extends signUpDTO {}

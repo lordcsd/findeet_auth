@@ -11,7 +11,7 @@ export class ParentAuthGuard extends AuthGuard('jwt') {
     if (!user) {
       throw new UnauthorizedException();
     }
-    if (user && user.role === userRoles.parent) {
+    if (user && user.role === userRoles.PARENT) {
       return user;
     }
     throw new UnauthorizedException();

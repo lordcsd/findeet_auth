@@ -23,6 +23,7 @@ import { createOTP } from './utils/createOTP';
 import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
 import { decodedProcessTokenDTO } from './dtos/completeEmailVerification.dto';
 import { ResetPasswordDTO } from './dtos/resetPassword.dto';
+import { userRoles } from 'src/dtos/userRole.dto';
 @Injectable()
 export class AuthService {
   userRepository: Repository<User>;
@@ -57,7 +58,11 @@ export class AuthService {
     return passwordIsValid ? user : null;
   }
 
-  async signUp(details: signUpDTO): Promise<FindeetAppResponse> {
+  async signUp(
+    details: signUpDTO,
+    role: userRoles,
+    req,
+  ): Promise<FindeetAppResponse> {
     const alreadyExisting = await this.userRepository.findOne({
       where: { email: details.email },
     });
@@ -69,14 +74,15 @@ export class AuthService {
     details.password = await bcrypt.hash(details.password, salt);
 
     await this.userRepository.save({
-      name: details.name,
+      firstName: details.firstName,
+      lastName: details.lastName,
       email: details.email,
       password: details.password,
-      role: details.role,
+      role: role,
     });
 
     //send email verification mail
-    await this.sendEmailVerificationEmail({ email: details.email });
+    await this.sendEmailVerificationEmail({ email: details.email }, req);
 
     return FindeetAppResponse.Ok('', 'New User created', 200);
   }
@@ -143,6 +149,7 @@ export class AuthService {
 
   async sendEmailVerificationEmail(
     details: EmailVerificationMail,
+    req,
   ): Promise<FindeetAppResponse> {
     const { email } = details;
 
@@ -230,7 +237,7 @@ export class AuthService {
 
     await this.userRepository.update(
       { email: fetchedUser.email },
-      { login_otp: otp, login_otp_expires: OTPExpires },
+      { loginOtp: otp, loginOtpExpires: OTPExpires },
     );
 
     await this.sendEmail({
@@ -238,7 +245,7 @@ export class AuthService {
       emailType: EmailTypes.LOGIN_OTP,
       subject: 'Login OTP',
       otp: otp,
-      username: fetchedUser.fullname,
+      username: `${fetchedUser.firstName} ${fetchedUser.lastName}`,
     });
 
     return FindeetAppResponse.Ok('', 'Login OTP sent to email', '201');
@@ -260,7 +267,7 @@ export class AuthService {
       );
     }
 
-    if (!user.login_otp) {
+    if (!user.loginOtp) {
       return FindeetAppResponse.NotFoundRequest(
         '',
         'No Login OTP found for user',
@@ -269,8 +276,7 @@ export class AuthService {
       );
     }
 
-    const OTPValid =
-      +user.login_otp_expires > Date.now() && user.login_otp == otp;
+    const OTPValid = +user.loginOtpExpires > Date.now() && user.loginOtp == otp;
 
     if (OTPValid) {
       const payload = {
@@ -280,7 +286,7 @@ export class AuthService {
 
       await this.userRepository.update(
         { email: user.email },
-        { login_otp: null, login_otp_expires: null },
+        { loginOtp: null, loginOtpExpires: null },
       );
 
       return FindeetAppResponse.Ok(
