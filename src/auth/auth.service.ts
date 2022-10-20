@@ -61,14 +61,18 @@ export class AuthService {
   async signUp(
     details: signUpDTO,
     role: userRoles,
-    req,
   ): Promise<FindeetAppResponse> {
     const alreadyExisting = await this.userRepository.findOne({
       where: { email: details.email },
     });
 
     if (alreadyExisting) {
-      throw new ConflictException('Email Already in use');
+      return FindeetAppResponse.BadRequest(
+        '',
+        'Email Already in use',
+        '409',
+        '',
+      );
     }
     const salt = Number(this.configService.get(configConstants.bcrypt.salt));
     details.password = await bcrypt.hash(details.password, salt);
@@ -82,7 +86,7 @@ export class AuthService {
     });
 
     //send email verification mail
-    await this.sendEmailVerificationEmail({ email: details.email }, req);
+    await this.sendEmailVerificationEmail({ email: details.email });
 
     return FindeetAppResponse.Ok('', 'New User created', 200);
   }
@@ -149,7 +153,6 @@ export class AuthService {
 
   async sendEmailVerificationEmail(
     details: EmailVerificationMail,
-    req,
   ): Promise<FindeetAppResponse> {
     const { email } = details;
 
@@ -304,13 +307,13 @@ export class AuthService {
     return FindeetAppResponse.OkFailue('', 'OTP has Expired', '406', '');
   }
 
-  googleLogin(req, userRole: string) {
+  OAuthLogin(req, userRole: string) {
     if (!req.user) {
-      return 'No user from google';
+      return 'No user from provider';
     }
 
     return {
-      message: 'User information from google',
+      message: 'User information from provider',
       user: { ...req.user, userRole },
     };
   }

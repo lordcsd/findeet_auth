@@ -11,21 +11,25 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { ClientsModule } from '@nestjs/microservices/module/clients.module';
 import { Transport } from '@nestjs/microservices/enums/transport.enum';
+import { FacebookStrategy } from './strategies/facebook.strategy';
 
 @Module({
   imports: [
     UserModule,
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
         name: 'NOTIF_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URL],
-          queue: 'NOTIFICATION',
-          queueOptions: {
-            durable: false,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>(configConstants.rabbitMQ.url)],
+            queue: 'NOTIFICATION',
+            queueOptions: {
+              durable: false,
+            },
           },
-        },
+        }),
+        inject: [ConfigService],
       },
     ]),
     SharedModule,
@@ -43,6 +47,6 @@ import { Transport } from '@nestjs/microservices/enums/transport.enum';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, FacebookStrategy],
 })
 export class AuthModule {}

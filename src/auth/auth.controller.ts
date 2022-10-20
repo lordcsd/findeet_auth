@@ -3,6 +3,7 @@ import {
   Controller,
   Post,
   Get,
+  Res,
   UseGuards,
   Req,
   Session,
@@ -28,6 +29,10 @@ import { CompleteEmailVerificationDTO } from './dtos/completeEmailVerification.d
 import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
 import { ResetPasswordDTO } from './dtos/resetPassword.dto';
 import { userRoles } from 'src/dtos/userRole.dto';
+import { FacebookAuthGuard } from './guards/facebook.Auth.guard';
+import { AuthGuard } from '@nestjs/passport';
+import { Request, Response } from 'express';
+import * as qs from 'qs';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -57,7 +62,7 @@ export class AuthController {
     @Body() params: EmailVerificationMail,
     @Req() req,
   ) {
-    return await this.authService.sendEmailVerificationEmail(params, req);
+    return await this.authService.sendEmailVerificationEmail(params);
   }
 
   @ApiOperation({
@@ -88,29 +93,29 @@ export class AuthController {
     return await this.authService.forgotPassWord(details);
   }
 
-  // @ApiOperation({ description: 'Create a new STUDENT user' })
-  // @Post('student-sign-up')
-  // async signUpStudent(
-  //   @Body() userDetails: StudentSignUpDTO,
-  // ): Promise<FindeetAppResponse> {
-  //   return await this.authService.signUp(userDetails, userRoles.STUDENT);
-  // }
+  @ApiOperation({ description: 'Create a new STUDENT user' })
+  @Post('student-sign-up')
+  async signUpStudent(
+    @Body() userDetails: StudentSignUpDTO,
+  ): Promise<FindeetAppResponse> {
+    return await this.authService.signUp(userDetails, userRoles.STUDENT);
+  }
 
-  // @ApiOperation({ description: 'Create a new PARENT user' })
-  // @Post('parent-sign-up')
-  // async signUpParent(
-  //   @Body() userDetails: ParentSignUpDTO,
-  // ): Promise<FindeetAppResponse> {
-  //   return await this.authService.signUp(userDetails, userRoles.PARENT);
-  // }
+  @ApiOperation({ description: 'Create a new PARENT user' })
+  @Post('parent-sign-up')
+  async signUpParent(
+    @Body() userDetails: ParentSignUpDTO,
+  ): Promise<FindeetAppResponse> {
+    return await this.authService.signUp(userDetails, userRoles.PARENT);
+  }
 
-  // @ApiOperation({ description: 'Create a new SCHOOL user' })
-  // @Post('school-sign-up')
-  // async signUpSchool(
-  //   @Body() userDetails: SchoolSignUpDTO,
-  // ): Promise<FindeetAppResponse> {
-  //   return await this.authService.signUp(userDetails, userRoles.SCHOOL);
-  // }
+  @ApiOperation({ description: 'Create a new SCHOOL user' })
+  @Post('school-sign-up')
+  async signUpSchool(
+    @Body() userDetails: SchoolSignUpDTO,
+  ): Promise<FindeetAppResponse> {
+    return await this.authService.signUp(userDetails, userRoles.SCHOOL);
+  }
 
   //google auth routes
   @Get('start-auth-provider-session')
@@ -130,8 +135,28 @@ export class AuthController {
 
   @Get('redirect')
   @UseGuards(GoogleAuthGuard)
-  googleAuthRedirect(@Req() req, @Session() session: Record<string, any>) {
-    return this.authService.googleLogin(req, session['userRole']);
+  googleAuthRedirect(
+    @Req() req: Request,
+    @Session() session: Record<string, any>,
+    @Res() res: Response,
+  ) {
+    return this.authService.OAuthLogin(req, session['userRole']);
+  }
+
+  @Get('facebook-auth')
+  @UseGuards(FacebookAuthGuard)
+  async facebookAuth(@Req() req, @Session() session: Record<string, any>) {
+    //
+  }
+
+  @Get('/facebook/redirect')
+  @UseGuards(AuthGuard('facebook'))
+  async facebookLoginRedirect(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Session() session: Record<string, any>,
+  ): Promise<any> {
+    return this.authService.OAuthLogin(req, session['userRole']);
   }
 
   // @ApiBearerAuth()

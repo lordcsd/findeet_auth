@@ -9,10 +9,11 @@ import {
   IsNumberString,
   IsDateString,
   IsNumber,
+  IsOptional,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { userRoles } from '../../dtos/userRole.dto';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StudentClassCategoryeEnum } from './studentClassCategory.DTO';
 
 export class signUpDTO {
@@ -92,18 +93,20 @@ export class ParentSignUpDTO extends signUpDTO {
   })
   parentLocation: string;
 
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     description: 'Parent"s home address',
     default: '20 Andrew road Ikoyi',
   })
   parentAddress: string;
 
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: String,
     description: 'Parent spouse"s name ',
     default: 'Otamere',

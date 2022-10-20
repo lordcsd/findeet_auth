@@ -13,6 +13,10 @@ export const configConstants = {
     clientId: 'GOOGLE_AUTH_CLIENT_ID',
     clientSecret: 'GOOGLE_AUTH_CLIENT_SECRET',
   },
+  facebookAuth: {
+    appId: 'FACEBOOK_AUTH_APP_ID',
+    apiKey: 'FACEBOOK_AUTH_API_SECRET',
+  },
   mailjet: {
     apiKey: 'MAIL_JET_API_KEY',
     apiSecret: 'MAIL_JET_API_SECRET',
