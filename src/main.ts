@@ -3,10 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as session from 'express-session';
-import { Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { configConstants } from './constants/configConstants';
-import { MicroserviceOptions } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +24,8 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  app.enableCors({ origin: '*' });
 
   app.setGlobalPrefix('/api/v1');
 
