@@ -24,6 +24,10 @@ import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
 import { decodedProcessTokenDTO } from './dtos/completeEmailVerification.dto';
 import { ResetPasswordDTO } from './dtos/resetPassword.dto';
 import { userRoles } from 'src/dtos/userRole.dto';
+import * as speakeasy from 'speakeasy';
+import * as QRCode from 'qrcode';
+import { Stream } from 'stream';
+
 @Injectable()
 export class AuthService {
   userRepository: Repository<User>;
@@ -44,6 +48,19 @@ export class AuthService {
       NOTIFICATION_QUEUE.PATTERNS.SEND_MAIL,
       details,
     );
+  }
+
+  async generate2FA_QRcode(email: string, response: any) {
+    const { otpauth_url, base32 } = speakeasy.generateSecret({
+      name: this.configService.get<string>(configConstants.google2FA.appName),
+    });
+
+    await this.userRepository.update(
+      { email },
+      { twoFactorAuthenticationCode: base32 },
+    );
+
+    return QRCode.toFileStream(response, otpauth_url);
   }
 
   async validate(email: string, password: string) {

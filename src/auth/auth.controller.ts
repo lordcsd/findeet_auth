@@ -39,6 +39,14 @@ import * as qs from 'qs';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // @Get('test-qr')
+  // async generate2FA_QRCode(
+  //   @Res() res: Response,
+  //   @Body() { email }: EmailVerificationMail,
+  // ) {
+  //   return await this.authService.generate2FA_QRcode(email, res);
+  // }
+
   @ApiOperation({ description: 'Log-in to Findeet account' })
   @Post('login')
   async login(@Body() params: loginDTO): Promise<FindeetAppResponse> {

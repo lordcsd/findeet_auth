@@ -41,6 +41,9 @@ export class User extends SharedEntity {
   @Column({ nullable: true })
   loginOtpExpires: Date;
 
+  @Column({ nullable: true })
+  twoFactorAuthenticationCode: string;
+
   @Column({ nullable: true, type: 'enum', enum: StudentClassCategoryeEnum })
   studentCategory: StudentClassCategoryeEnum;
 
