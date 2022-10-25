@@ -9,17 +9,6 @@ import {
 } from 'class-validator';
 
 export class ResetPasswordDTO {
-  @IsNotEmpty({ message: 'Email cannot be empty' })
-  @IsString({ message: 'Email: Must be a string' })
-  @IsEmail({}, { message: 'Invalid Email' })
-  @Transform(({ value }) => value.toLowerCase())
-  @ApiProperty({
-    type: String,
-    description: 'User email',
-    default: 'nicdos@gmail.com',
-  })
-  email: string;
-
   @IsNotEmpty({ message: 'oldPassword: Must not be empty' })
   @IsString({ message: 'oldPassword: Must be a string' })
   @MinLength(8, { message: 'oldPassword: Must have at least 8 characters' })

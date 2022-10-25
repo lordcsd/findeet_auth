@@ -3,6 +3,9 @@ import {
   Injectable,
   Inject,
   NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
@@ -43,6 +46,19 @@ export class AuthService {
     @Inject('NOTIF_SERVICE') private notificationClient: ClientProxy,
   ) {
     this.userRepository = this.customRepository.UserRepository();
+
+    console.log(
+      this.jwtService.sign(
+        {
+          id: '8223958a-925b-4fb6-b79a-de0b998d40d5',
+          email: 'dimgbachinonso@gmail.com',
+        },
+        {
+          secret: this.jwt_secret,
+          expiresIn: 7200,
+        },
+      ),
+    );
   }
 
   jwt_secret = this.configService.get<string>(configConstants.jwt.secret);
@@ -102,41 +118,33 @@ export class AuthService {
     details: EmailVerificationMail,
   ): Promise<FindeetAppResponse> {
     const { email } = details;
-    const user = await this.userRepository.find({ where: { email: email } });
+    const user: User = await this.userRepository.findOne({
+      where: { email: email },
+    });
 
     if (!user) {
-      return FindeetAppResponse.NotFoundRequest(
-        'Invalid user',
-        'User with Email not found',
-        '',
-        '404',
-      );
+      throw new NotFoundException('User with Email not found');
     }
+
+    await this.sendForgotPasswordToken(user.email, user.id);
+
+    return FindeetAppResponse.Ok(
+      '',
+      'Password Recovery mail sent to Email',
+      '200',
+    );
   }
 
-  async resetPassword(details: ResetPasswordDTO): Promise<FindeetAppResponse> {
-    const { email, newPassword, oldPassword, confirmPassword } = details;
-
-    const user = await this.userRepository.findOne({ where: { email } });
-
-    if (!user) {
-      return FindeetAppResponse.BadRequest(
-        'Not Found',
-        'Invalid Email',
-        '',
-        '404',
-      );
-    }
+  async resetPassword(
+    details: ResetPasswordDTO,
+    user: User,
+  ): Promise<FindeetAppResponse> {
+    const { newPassword, oldPassword, confirmPassword } = details;
 
     const passwordIsValid = await bcrypt.compare(oldPassword, user.password);
 
     if (!passwordIsValid) {
-      return FindeetAppResponse.BadRequest(
-        '',
-        'Invalid oldPassword',
-        '',
-        '406',
-      );
+      throw new UnauthorizedException('invalid old password');
     }
 
     if (newPassword == confirmPassword) {
@@ -144,17 +152,14 @@ export class AuthService {
       const newPasswordHash = await bcrypt.hash(newPassword, salt);
 
       await this.userRepository.update(
-        { email, password: user.password },
+        { email: user.email, password: user.password },
         { password: newPasswordHash },
       );
       return FindeetAppResponse.Ok('', 'Password Updated', '200');
     }
 
-    return FindeetAppResponse.BadRequest(
-      '',
+    throw new BadRequestException(
       'newPassword and confirmPassword does not match',
-      '',
-      '422',
     );
   }
 
@@ -166,12 +171,7 @@ export class AuthService {
     const user = await this.userRepository.findOne({ where: { email } });
 
     if (!user) {
-      return FindeetAppResponse.BadRequest(
-        'Email not registered',
-        'invalid Email',
-        '',
-        '404',
-      );
+      throw new NotFoundException('No user with such email');
     }
 
     if (user.emailVerified == true) {
@@ -194,6 +194,31 @@ export class AuthService {
     return FindeetAppResponse.Ok('', 'Email verification mail sent', '201');
   }
 
+  async sendForgotPasswordToken(email: string, id: string) {
+    const processToken = this.jwtService.sign({ id, email });
+
+    const completeProcessURL = `${this.configService.get<string>(
+      configConstants.service.root,
+    )}/api/v1/auth/complete-forget-password?token=${processToken}`;
+
+    await this.sendEmail({
+      recipients: [email],
+      emailType: EmailTypes.FORGOT_PASSWORD_OTP,
+      subject: 'Password Recovery',
+      redirectTo: completeProcessURL,
+    });
+  }
+
+  async completeForgotPassword(token: string) {
+    const decryptedToken = this.jwtService.decode(token);
+
+    if (!decryptedToken) {
+      throw new BadRequestException('Invalid token');
+    }
+
+    //redirect to use
+  }
+
   async completeEmailVerification(
     processToken: string,
   ): Promise<FindeetAppResponse> {
@@ -209,11 +234,8 @@ export class AuthService {
       return FindeetAppResponse.Ok('', 'Email Verified', 200);
     }
 
-    return FindeetAppResponse.OkFailue(
-      '',
+    throw new UnprocessableEntityException(
       'Verification Process Failed, Invalid Token',
-      '422',
-      '',
     );
   }
 
@@ -221,22 +243,12 @@ export class AuthService {
     const fetchedUser = await this.validate(user.email, user.password);
 
     if (!fetchedUser) {
-      return FindeetAppResponse.BadRequest(
-        '',
-        'Invalid creadentials',
-        '',
-        '406',
-      );
+      throw new UnauthorizedException('Invalid creadentials');
     }
 
     if (fetchedUser && fetchedUser.authProvider == AuthProviders.local) {
       if (!fetchedUser.emailVerified) {
-        return FindeetAppResponse.NotFoundRequest(
-          'Unverified Email',
-          'Please Verify your Email',
-          '',
-          '406',
-        );
+        throw new UnprocessableEntityException('Please Verify your Email');
       }
     }
 
@@ -269,21 +281,11 @@ export class AuthService {
     const user = await this.userService.getUserByEmail(email);
 
     if (!user) {
-      return FindeetAppResponse.NotFoundRequest(
-        'Invalid User',
-        'Email not registered',
-        '',
-        '404',
-      );
+      throw new NotFoundException('Email not registered');
     }
 
     if (!user.loginOtp) {
-      return FindeetAppResponse.NotFoundRequest(
-        '',
-        'No Login OTP found for user',
-        '',
-        '404',
-      );
+      throw new NotFoundException('No Login OTP found for user');
     }
 
     const OTPValid = +user.loginOtpExpires > Date.now() && user.loginOtp == otp;
@@ -311,7 +313,7 @@ export class AuthService {
       );
     }
 
-    return FindeetAppResponse.OkFailue('', 'OTP has Expired', '406', '');
+    throw new BadRequestException('OTP Expired');
   }
 
   OAuthLogin(req, userRole: string) {
