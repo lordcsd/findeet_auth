@@ -54,7 +54,7 @@ export class signUpDTO extends PasswordDTO {
     description: 'User role',
     default: UserRoles.STUDENT,
   })
-  userRole: UserRoles;
+  role: UserRoles;
 }
 
 export class StudentSignUpDTO extends signUpDTO {
