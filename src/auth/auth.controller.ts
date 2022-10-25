@@ -101,29 +101,35 @@ export class AuthController {
     return await this.authService.forgotPassWord(details);
   }
 
-  @ApiOperation({ description: 'Create a new STUDENT user' })
-  @Post('student-sign-up')
-  async signUpStudent(
-    @Body() userDetails: StudentSignUpDTO,
-  ): Promise<FindeetAppResponse> {
-    return await this.authService.signUp(userDetails, userRoles.STUDENT);
+  @ApiOperation({ description: 'Create a new user' })
+  @Post('sign-up')
+  async signUp(@Body() userDetails: signUpDTO): Promise<FindeetAppResponse> {
+    return await this.authService.signUp(userDetails);
   }
 
-  @ApiOperation({ description: 'Create a new PARENT user' })
-  @Post('parent-sign-up')
-  async signUpParent(
-    @Body() userDetails: ParentSignUpDTO,
-  ): Promise<FindeetAppResponse> {
-    return await this.authService.signUp(userDetails, userRoles.PARENT);
-  }
+  // @ApiOperation({ description: 'Create a new STUDENT user' })
+  // @Post('student-sign-up')
+  // async signUpStudent(
+  //   @Body() userDetails: StudentSignUpDTO,
+  // ): Promise<FindeetAppResponse> {
+  //   return await this.authService.signUp(userDetails, userRoles.STUDENT);
+  // }
 
-  @ApiOperation({ description: 'Create a new SCHOOL user' })
-  @Post('school-sign-up')
-  async signUpSchool(
-    @Body() userDetails: SchoolSignUpDTO,
-  ): Promise<FindeetAppResponse> {
-    return await this.authService.signUp(userDetails, userRoles.SCHOOL);
-  }
+  // @ApiOperation({ description: 'Create a new PARENT user' })
+  // @Post('parent-sign-up')
+  // async signUpParent(
+  //   @Body() userDetails: ParentSignUpDTO,
+  // ): Promise<FindeetAppResponse> {
+  //   return await this.authService.signUp(userDetails, userRoles.PARENT);
+  // }
+
+  // @ApiOperation({ description: 'Create a new SCHOOL user' })
+  // @Post('school-sign-up')
+  // async signUpSchool(
+  //   @Body() userDetails: SchoolSignUpDTO,
+  // ): Promise<FindeetAppResponse> {
+  //   return await this.authService.signUp(userDetails, userRoles.SCHOOL);
+  // }
 
   //google auth routes
   @Get('start-auth-provider-session')

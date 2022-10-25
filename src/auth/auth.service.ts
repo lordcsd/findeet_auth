@@ -75,12 +75,10 @@ export class AuthService {
     return passwordIsValid ? user : null;
   }
 
-  async signUp(
-    details: signUpDTO,
-    role: userRoles,
-  ): Promise<FindeetAppResponse> {
+  async signUp(details: signUpDTO): Promise<FindeetAppResponse> {
+    const { firstName, email, password, lastName } = details;
     const alreadyExisting = await this.userRepository.findOne({
-      where: { email: details.email },
+      where: { email },
     });
 
     if (alreadyExisting) {
@@ -92,14 +90,13 @@ export class AuthService {
       );
     }
     const salt = Number(this.configService.get(configConstants.bcrypt.salt));
-    details.password = await bcrypt.hash(details.password, salt);
+    const encryptedPassword = await bcrypt.hash(password, salt);
 
     await this.userRepository.save({
-      firstName: details.firstName,
-      lastName: details.lastName,
-      email: details.email,
-      password: details.password,
-      role: role,
+      firstName,
+      email,
+      password: encryptedPassword,
+      ...(lastName && { lastName }),
     });
 
     //send email verification mail

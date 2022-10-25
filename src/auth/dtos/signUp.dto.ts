@@ -2,21 +2,17 @@ import {
   IsString,
   IsEnum,
   IsNotEmpty,
-  Matches,
-  MinLength,
   IsEmail,
-  IsDate,
-  IsNumberString,
   IsDateString,
   IsNumber,
   IsOptional,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { userRoles } from '../../dtos/userRole.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StudentClassCategoryeEnum } from './studentClassCategory.DTO';
+import { PasswordDTO } from './password.dto';
 
-export class signUpDTO {
+export class signUpDTO extends PasswordDTO {
   @IsNotEmpty()
   @IsString()
   @ApiProperty({
@@ -44,19 +40,6 @@ export class signUpDTO {
     default: 'nicdos@gmail.com',
   })
   email: string;
-
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(8)
-  @Matches(/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})/, {
-    message: 'password too weak',
-  })
-  @ApiProperty({
-    type: String,
-    description: "User's secure pawword",
-    default: 'ckjsdhcuisjdu7y12%^',
-  })
-  password: string;
 }
 
 export class StudentSignUpDTO extends signUpDTO {
