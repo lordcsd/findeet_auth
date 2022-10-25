@@ -75,9 +75,8 @@ export class AuthService {
   }
 
   async signUp(details: signUpDTO): Promise<FindeetAppResponse> {
-    const { firstName, email, password, lastName } = details;
     const alreadyExisting = await this.userRepository.findOne({
-      where: { email },
+      where: { email: details.email },
     });
 
     if (alreadyExisting) {
@@ -89,14 +88,9 @@ export class AuthService {
       );
     }
     const salt = Number(this.configService.get(configConstants.bcrypt.salt));
-    const encryptedPassword = await bcrypt.hash(password, salt);
+    details.password = await bcrypt.hash(details.password, salt);
 
-    await this.userRepository.save({
-      firstName,
-      email,
-      password: encryptedPassword,
-      ...(lastName && { lastName }),
-    });
+    await this.userRepository.save(details);
 
     //send email verification mail
     await this.sendEmailVerificationEmail({ email: details.email });
