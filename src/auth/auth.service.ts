@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, Inject } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  Inject,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { ConfigService } from '@nestjs/config';
@@ -80,12 +85,7 @@ export class AuthService {
     });
 
     if (alreadyExisting) {
-      return FindeetAppResponse.BadRequest(
-        '',
-        'Email Already in use',
-        '409',
-        '',
-      );
+      throw new ConflictException('Email Already in use');
     }
     const salt = Number(this.configService.get(configConstants.bcrypt.salt));
     details.password = await bcrypt.hash(details.password, salt);
