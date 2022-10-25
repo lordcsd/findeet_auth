@@ -28,7 +28,6 @@ import { EmailVerificationMail } from './dtos/emailVerificationMail.dto';
 import { CompleteEmailVerificationDTO } from './dtos/completeEmailVerification.dto';
 import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
 import { ResetPasswordDTO } from './dtos/resetPassword.dto';
-import { userRoles } from 'src/dtos/userRole.dto';
 import { FacebookAuthGuard } from './guards/facebook.Auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { Request, Response } from 'express';

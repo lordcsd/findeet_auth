@@ -11,6 +11,7 @@ import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StudentClassCategoryeEnum } from './studentClassCategory.DTO';
 import { PasswordDTO } from './password.dto';
+import { UserRoles } from 'src/dtos/userRole.dto';
 
 export class signUpDTO extends PasswordDTO {
   @IsNotEmpty()
@@ -40,6 +41,20 @@ export class signUpDTO extends PasswordDTO {
     default: 'nicdos@gmail.com',
   })
   email: string;
+
+  @IsNotEmpty()
+  @IsEnum(UserRoles, {
+    message: `userRole: Must be either ${Object.values(UserRoles).join(
+      ' or ',
+    )}`,
+  })
+  @ApiProperty({
+    type: String,
+    enum: UserRoles,
+    description: 'User role',
+    default: UserRoles.STUDENT,
+  })
+  userRole: UserRoles;
 }
 
 export class StudentSignUpDTO extends signUpDTO {

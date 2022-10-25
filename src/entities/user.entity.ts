@@ -1,4 +1,4 @@
-import { userRoles } from '../dtos/userRole.dto';
+import { UserRoles } from '../dtos/userRole.dto';
 import { SharedEntity } from '../shared/shared.entity';
 import { Entity, Column } from 'typeorm';
 import { AuthProviders } from 'src/constants/authProviders';
@@ -31,9 +31,9 @@ export class User extends SharedEntity {
 
   @Column({
     type: 'enum',
-    enum: userRoles,
+    enum: UserRoles,
   })
-  role: userRoles;
+  role: UserRoles;
 
   @Column({ nullable: true })
   loginOtp: string;

@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum } from 'class-validator';
-import { userRoles } from '../../dtos/userRole.dto';
+import { UserRoles } from '../../dtos/userRole.dto';
 
 export class StartAuthSessionDTO {
-  @ApiProperty({ type: userRoles, default: userRoles.STUDENT })
-  @IsEnum(userRoles, {
-    message: `userRole must be ${Object.keys(userRoles).join(' or ')}`,
+  @ApiProperty({ type: UserRoles, default: UserRoles.STUDENT })
+  @IsEnum(UserRoles, {
+    message: `userRole must be ${Object.keys(UserRoles).join(' or ')}`,
   })
-  userRole: userRoles;
+  userRole: UserRoles;
 }

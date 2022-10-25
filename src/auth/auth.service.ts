@@ -23,7 +23,6 @@ import { createOTP } from './utils/createOTP';
 import { CompleteLoginWithOTP } from './dtos/completeLoginWithOTP';
 import { decodedProcessTokenDTO } from './dtos/completeEmailVerification.dto';
 import { ResetPasswordDTO } from './dtos/resetPassword.dto';
-import { userRoles } from 'src/dtos/userRole.dto';
 import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
 import { Stream } from 'stream';
