@@ -112,9 +112,19 @@ export class AuthController {
   }
 
   @ApiOperation({ description: 'Create a new user' })
-  @Post('sign-up')
-  async signUp(@Body() userDetails: signUpDTO): Promise<FindeetAppResponse> {
-    return await this.authService.signUp(userDetails);
+  @Post('student-sign-up')
+  async studentSignUp(
+    @Body() userDetails: StudentSignUpDTO,
+  ): Promise<FindeetAppResponse> {
+    return await this.authService.signUp(userDetails, UserRoles.STUDENT);
+  }
+
+  @ApiOperation({ description: 'Create a new user' })
+  @Post('parent-sign-up')
+  async parentSignUp(
+    @Body() userDetails: ParentSignUpDTO,
+  ): Promise<FindeetAppResponse> {
+    return await this.authService.signUp(userDetails, UserRoles.PARENT);
   }
 
   //google auth routes

@@ -42,19 +42,19 @@ export class signUpDTO extends PasswordDTO {
   })
   email: string;
 
-  @IsNotEmpty()
-  @IsEnum(UserRoles, {
-    message: `userRole: Must be either ${Object.values(UserRoles).join(
-      ' or ',
-    )}`,
-  })
-  @ApiProperty({
-    type: String,
-    enum: UserRoles,
-    description: 'User role',
-    default: UserRoles.STUDENT,
-  })
-  role: UserRoles;
+  // @IsNotEmpty()
+  // @IsEnum(UserRoles, {
+  //   message: `userRole: Must be either ${Object.values(UserRoles).join(
+  //     ' or ',
+  //   )}`,
+  // })
+  // @ApiProperty({
+  //   type: String,
+  //   enum: UserRoles,
+  //   description: 'User role',
+  //   default: UserRoles.STUDENT,
+  // })
+  // role: UserRoles;
 }
 
 export class StudentSignUpDTO extends signUpDTO {

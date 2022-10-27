@@ -33,7 +33,7 @@ import { decodedProcessTokenDTO } from './dtos/completeEmailVerification.dto';
 import { ResetPasswordDTO } from './dtos/resetPassword.dto';
 import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
-import { Stream } from 'stream';
+import { UserRoles } from '../dtos/userRole.dto';
 
 @Injectable()
 export class AuthService {
@@ -49,6 +49,12 @@ export class AuthService {
   }
 
   jwt_secret = this.configService.get<string>(configConstants.jwt.secret);
+
+  getAuthToken(id: string, email: string) {
+    return {
+      access_token: this.jwtService.sign({ id, email }),
+    };
+  }
 
   async sendEmail(details: SendEmailOptions) {
     await this.notificationClient.emit(
@@ -82,7 +88,10 @@ export class AuthService {
     return passwordIsValid ? user : null;
   }
 
-  async signUp(details: signUpDTO): Promise<FindeetAppResponse> {
+  async signUp(
+    details: signUpDTO,
+    role: UserRoles,
+  ): Promise<FindeetAppResponse> {
     const alreadyExisting = await this.userRepository.findOne({
       where: { email: details.email },
     });
@@ -93,7 +102,7 @@ export class AuthService {
     const salt = Number(this.configService.get(configConstants.bcrypt.salt));
     details.password = await bcrypt.hash(details.password, salt);
 
-    await this.userRepository.save(details);
+    await this.userRepository.save({ ...details, role });
 
     //send email verification mail
     await this.sendEmailVerificationEmail({ email: details.email });
@@ -171,14 +180,12 @@ export class AuthService {
       configConstants.service.root,
     )}/api/v1/auth/complete-email-verification?processToken=${processToken}`;
 
-    console.log(completeProcessURL);
-
-    // await this.sendEmail({
-    //   recipients: [email],
-    //   emailType: EmailTypes.EMAIL_VERIFICATION,
-    //   subject: 'Email Verification',
-    //   redirectTo: completeProcessURL,
-    // });
+    await this.sendEmail({
+      recipients: [email],
+      emailType: EmailTypes.EMAIL_VERIFICATION,
+      subject: 'Email Verification',
+      redirectTo: completeProcessURL,
+    });
 
     return FindeetAppResponse.Ok('', 'Email verification mail sent', '201');
   }
@@ -247,25 +254,35 @@ export class AuthService {
       }
     }
 
-    const otp = createOTP();
+    if (fetchedUser.role !== UserRoles.SCHOOL) {
+      return FindeetAppResponse.Ok(
+        this.getAuthToken(fetchedUser.id, fetchedUser.email),
+        'Login Successful',
+        201,
+      );
+    }
 
-    //ten minutes time
-    const OTPExpires = new Date(Date.now() + 1000 * 60 * 10);
+    if (fetchedUser.role == UserRoles.SCHOOL) {
+      const otp = createOTP();
 
-    await this.userRepository.update(
-      { email: fetchedUser.email },
-      { loginOtp: otp, loginOtpExpires: OTPExpires },
-    );
+      //ten minutes time
+      const OTPExpires = new Date(Date.now() + 1000 * 60 * 10);
 
-    await this.sendEmail({
-      recipients: [fetchedUser.email],
-      emailType: EmailTypes.LOGIN_OTP,
-      subject: 'Login OTP',
-      otp: otp,
-      username: `${fetchedUser.firstName} ${fetchedUser.lastName}`,
-    });
+      await this.userRepository.update(
+        { email: fetchedUser.email },
+        { loginOtp: otp, loginOtpExpires: OTPExpires },
+      );
 
-    return FindeetAppResponse.Ok('', 'Login OTP sent to email', '201');
+      await this.sendEmail({
+        recipients: [fetchedUser.email],
+        emailType: EmailTypes.LOGIN_OTP,
+        subject: 'Login OTP',
+        otp: otp,
+        username: `${fetchedUser.firstName} ${fetchedUser.lastName}`,
+      });
+
+      return FindeetAppResponse.Ok('', 'Login OTP sent to email', '201');
+    }
   }
 
   async completeLoginWithOTP(
@@ -297,12 +314,7 @@ export class AuthService {
       );
 
       return FindeetAppResponse.Ok(
-        {
-          access_token: this.jwtService.sign(payload, {
-            secret: this.jwt_secret,
-            expiresIn: 7200,
-          }),
-        },
+        this.getAuthToken(user.id, user.email),
         'Login Successful',
         201,
       );
