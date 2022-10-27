@@ -178,7 +178,9 @@ export class AuthService {
 
     const completeProcessURL = `${this.configService.get<string>(
       configConstants.service.root,
-    )}/api/v1/auth/complete-email-verification?processToken=${processToken}`;
+    )}/api/v1/auth/complete-email-verification?processToken=${processToken}&category=${
+      user.role
+    }`;
 
     await this.sendEmail({
       recipients: [email],
