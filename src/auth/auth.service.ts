@@ -229,11 +229,9 @@ export class AuthService {
       );
     }
 
-    return res.redirect(
-      `${this.configService.get<string>(
-        configConstants.service.root,
-      )}/api/v1/auth/forbidden_action`,
-    );
+    return res.sendFile('forbidden_action.html', {
+      root: './src/common/static',
+    });
   }
 
   async login(user: loginDTO): Promise<FindeetAppResponse> {

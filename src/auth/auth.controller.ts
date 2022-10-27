@@ -158,11 +158,4 @@ export class AuthController {
   ): Promise<any> {
     return this.authService.OAuthLogin(req, session['userRole']);
   }
-
-  @Get('forbidden_action')
-  async html(@Res() res: Response) {
-    return res.sendFile('forbidden_action.html', {
-      root: './src/common/static',
-    });
-  }
 }
