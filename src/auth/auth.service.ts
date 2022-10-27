@@ -46,19 +46,6 @@ export class AuthService {
     @Inject('NOTIF_SERVICE') private notificationClient: ClientProxy,
   ) {
     this.userRepository = this.customRepository.UserRepository();
-
-    console.log(
-      this.jwtService.sign(
-        {
-          id: '8223958a-925b-4fb6-b79a-de0b998d40d5',
-          email: 'dimgbachinonso@gmail.com',
-        },
-        {
-          secret: this.jwt_secret,
-          expiresIn: 7200,
-        },
-      ),
-    );
   }
 
   jwt_secret = this.configService.get<string>(configConstants.jwt.secret);
@@ -242,8 +229,10 @@ export class AuthService {
       );
     }
 
-    throw new UnprocessableEntityException(
-      'Verification Process Failed, Invalid Token',
+    return res.redirect(
+      `${this.configService.get<string>(
+        configConstants.service.root,
+      )}/api/v1/auth/forbidden_action`,
     );
   }
 

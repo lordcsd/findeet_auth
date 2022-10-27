@@ -4,11 +4,18 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as session from 'express-session';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import * as express from 'express';
+import { resolve } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   const configService = app.get(ConfigService);
+
+  app.setGlobalPrefix('/api/v1');
+
+  app.use('/', express.static(resolve('./src/common/static')));
 
   app.use(
     session({
@@ -26,8 +33,6 @@ async function bootstrap() {
   );
 
   app.enableCors({ origin: '*' });
-
-  app.setGlobalPrefix('/api/v1');
 
   const config = new DocumentBuilder()
     .setTitle('Findeet Auth')

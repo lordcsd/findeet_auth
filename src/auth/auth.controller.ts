@@ -9,6 +9,7 @@ import {
   Session,
   Query,
   Headers,
+  Render,
 } from '@nestjs/common';
 import { loginDTO } from './dtos/login.dto';
 import {
@@ -156,5 +157,12 @@ export class AuthController {
     @Session() session: Record<string, any>,
   ): Promise<any> {
     return this.authService.OAuthLogin(req, session['userRole']);
+  }
+
+  @Get('forbidden_action')
+  async html(@Res() res: Response) {
+    return res.sendFile('forbidden_action.html', {
+      root: './src/common/static',
+    });
   }
 }
