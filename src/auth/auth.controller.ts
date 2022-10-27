@@ -79,8 +79,9 @@ export class AuthController {
   @Get('complete-email-verification')
   async completeEmailVerification(
     @Query() { processToken }: CompleteEmailVerificationDTO,
+    @Res() res: Response,
   ) {
-    return await this.authService.completeEmailVerification(processToken);
+    return await this.authService.completeEmailVerification(processToken, res);
   }
 
   @ApiOperation({ description: 'Change user password' })

@@ -28,5 +28,5 @@ export const configConstants = {
   rabbitMQ: {
     url: 'RABBITMQ_URL',
   },
-  service: { root: 'ROOT' },
+  service: { root: 'ROOT', frontendRoot: 'FRONTEND_ROOT' },
 };

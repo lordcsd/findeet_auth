@@ -184,12 +184,14 @@ export class AuthService {
       configConstants.service.root,
     )}/api/v1/auth/complete-email-verification?processToken=${processToken}`;
 
-    await this.sendEmail({
-      recipients: [email],
-      emailType: EmailTypes.EMAIL_VERIFICATION,
-      subject: 'Email Verification',
-      redirectTo: completeProcessURL,
-    });
+    console.log(completeProcessURL);
+
+    // await this.sendEmail({
+    //   recipients: [email],
+    //   emailType: EmailTypes.EMAIL_VERIFICATION,
+    //   subject: 'Email Verification',
+    //   redirectTo: completeProcessURL,
+    // });
 
     return FindeetAppResponse.Ok('', 'Email verification mail sent', '201');
   }
@@ -217,10 +219,12 @@ export class AuthService {
     }
 
     //redirect to use
+    return 'this route is under construction';
   }
 
   async completeEmailVerification(
     processToken: string,
+    res: any,
   ): Promise<FindeetAppResponse> {
     const decoded = this.jwtService.decode(
       processToken,
@@ -231,7 +235,11 @@ export class AuthService {
         { id: decoded.id },
         { emailVerified: true },
       );
-      return FindeetAppResponse.Ok('', 'Email Verified', 200);
+      return res.redirect(
+        `${this.configService.get<string>(
+          configConstants.service.frontendRoot,
+        )}/login`,
+      );
     }
 
     throw new UnprocessableEntityException(

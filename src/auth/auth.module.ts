@@ -41,7 +41,7 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
       imports: [ConfigModule],
       useFactory: async (configServeice: ConfigService) => ({
         secret: configServeice.get(configConstants.jwt.secret),
-        signOptions: { expiresIn: 3600 },
+        signOptions: { expiresIn: 7200 },
       }),
       inject: [ConfigService],
     }),
