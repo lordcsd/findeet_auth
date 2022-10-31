@@ -34,6 +34,7 @@ import { ResetPasswordDTO } from './dtos/resetPassword.dto';
 import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
 import { UserRoles } from '../dtos/userRole.dto';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -220,8 +221,8 @@ export class AuthService {
 
   async completeEmailVerification(
     processToken: string,
-    res: any,
-  ): Promise<FindeetAppResponse> {
+    res: Response,
+  ): Promise<FindeetAppResponse | void> {
     const decoded = this.jwtService.decode(
       processToken,
     ) as decodedProcessTokenDTO;
@@ -237,10 +238,7 @@ export class AuthService {
         )}/login`,
       );
     }
-
-    return res.sendFile('forbidden_action.html', {
-      root: './src/common/static',
-    });
+    return res.render('forbidden_Action');
   }
 
   async login(user: loginDTO): Promise<FindeetAppResponse> {
@@ -250,15 +248,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid creadentials');
     }
 
-    if (fetchedUser && fetchedUser.authProvider == AuthProviders.local) {
-      if (!fetchedUser.emailVerified) {
+    const { authProvider, role, emailVerified, id, email } = fetchedUser;
+
+    if (fetchedUser && authProvider == AuthProviders.local) {
+      if (!emailVerified) {
         throw new UnprocessableEntityException('Please Verify your Email');
       }
     }
 
-    if (fetchedUser.role !== UserRoles.SCHOOL) {
+    if (role !== UserRoles.SCHOOL) {
       return FindeetAppResponse.Ok(
-        this.getAuthToken(fetchedUser.id, fetchedUser.email),
+        { ...this.getAuthToken(id, email), role },
         'Login Successful',
         201,
       );
@@ -316,7 +316,7 @@ export class AuthService {
       );
 
       return FindeetAppResponse.Ok(
-        this.getAuthToken(user.id, user.email),
+        { ...this.getAuthToken(user.id, user.email), role: user.role },
         'Login Successful',
         201,
       );

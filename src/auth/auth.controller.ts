@@ -48,6 +48,12 @@ export class AuthController {
   //   return await this.authService.generate2FA_QRcode(email, res);
   // }
 
+  // @Get('ejs')
+  // @Render('forbidden_action')
+  // async ejs() {
+  //   return { message: 'Na here e sup' };
+  // }
+
   @ApiOperation({ description: 'Log-in to Findeet account' })
   @Post('login')
   async login(@Body() params: loginDTO): Promise<FindeetAppResponse> {

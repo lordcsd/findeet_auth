@@ -6,7 +6,7 @@ import * as session from 'express-session';
 import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import * as express from 'express';
-import { resolve } from 'path';
+import { resolve, join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -16,6 +16,10 @@ async function bootstrap() {
   app.setGlobalPrefix('/api/v1');
 
   app.use('/', express.static(resolve('./src/common/static')));
+
+  app.useStaticAssets(join(__dirname, '..', 'public'));
+  app.setBaseViewsDir(resolve('./src/common/static'));
+  app.setViewEngine('ejs');
 
   app.use(
     session({

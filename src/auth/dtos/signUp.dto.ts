@@ -59,17 +59,19 @@ export class signUpDTO extends PasswordDTO {
 
 export class StudentSignUpDTO extends signUpDTO {
   @IsNotEmpty()
+  @IsOptional()
   @IsDateString({ message: 'studentDOB: Must be valid date' })
-  @ApiProperty({ description: 'Students Day of Birth', type: Date })
+  @ApiPropertyOptional({ description: 'Students Day of Birth', type: Date })
   studentDOB: Date;
 
   @IsNotEmpty()
+  @IsOptional()
   @IsEnum(StudentClassCategoryeEnum, {
     message: `studentClassCategory: Must be ${Object.values(
       StudentClassCategoryeEnum,
     ).join(' or ')}`,
   })
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: `${Object.values(StudentClassCategoryeEnum).join(' or ')}`,
     default: StudentClassCategoryeEnum.NURSERY,
   })
@@ -77,14 +79,19 @@ export class StudentSignUpDTO extends signUpDTO {
 
   @IsNotEmpty()
   @IsNumber({}, { message: 'studentClass: Must be a number' })
-  @ApiProperty({ description: 'Students class', type: Number, default: 4 })
+  @ApiPropertyOptional({
+    description: 'Students class',
+    type: Number,
+    default: 4,
+  })
   studentClass: number;
 }
 
 export class ParentSignUpDTO extends signUpDTO {
   @IsNotEmpty()
   @IsString()
-  @ApiProperty({
+  @IsOptional()
+  @ApiPropertyOptional({
     type: String,
     description: 'Parent Location',
     default: 'Lagos, Nigeria',
